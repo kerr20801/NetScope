@@ -1,0 +1,1742 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NetScope — 全方位網路連通矩陣與封包威脅透視控制台</title>
+<style>
+:root {
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --bg: #0f1117;
+  --card-bg: #141826;
+  --border: #1f2937;
+  --border-light: #2a2d3e;
+  --text-main: #f9fafb;
+  --text-muted: #94a3b8;
+  --text-dim: #6b7280;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #0ea5e9;
+  --purple: #a855f7;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;font-size:13px;min-height:100vh}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0f1117,#141826);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{width:38px;height:38px;border-radius:9px;background:#0a1628;border:1.5px solid #0e4f7a;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#38bdf8}
+.header-text h1{font-size:16px;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:8px}
+.header-text p{font-size:11px;color:var(--text-dim);margin-top:2px}
+.header-right{display:flex;align-items:center;gap:10px}
+.sysinfo-pill{background:#111827;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.sysinfo-pill strong{color:#38bdf8}
+.github-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#1a1d2e;border:1px solid var(--border-light);color:var(--text-muted);text-decoration:none;font-size:11px;transition:all .2s}
+.github-badge:hover{border-color:#38bdf8;color:#fff}
+
+/* Tabs */
+.tabs-nav{background:#111522;border-bottom:1px solid var(--border);display:flex;padding:0 24px;gap:6px}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);padding:12px 18px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s}
+.tab-btn:hover{color:#fff}
+.tab-btn.active{color:#38bdf8;border-bottom-color:#38bdf8}
+
+/* Container */
+.main{max-width:1300px;margin:0 auto;padding:20px 20px 40px}
+
+/* Cards & zones */
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:16px}
+.card-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.card-hdr h2{font-size:14px;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:8px}
+.card-hdr p{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+
+/* Textareas & Inputs */
+textarea{width:100%;height:180px;background:#0a0c10;border:1px solid var(--border);border-radius:6px;color:#86efac;font-family:"Fira Code","Consolas",monospace;font-size:11.5px;padding:10px;resize:vertical;outline:none;line-height:1.55}
+textarea:focus{border-color:#0ea5e9}
+.sinput{background:#0a0c10;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:#e0e0e0;font-size:12px;outline:none}
+.sinput:focus{border-color:#0ea5e9}
+
+/* Buttons */
+.btn-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
+.btn{padding:8px 18px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;transition:opacity .15s, background .2s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{opacity:.88}
+.btn-primary{background:#0284c7;color:#fff}
+.btn-secondary{background:#1e293b;color:#94a3b8;border:1px solid var(--border-light)}
+.btn-secondary:hover{border-color:#38bdf8;color:#fff}
+.btn-danger{background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+/* Stats */
+.stats-bar{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.stat-pill{background:#141826;border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:11.5px;color:var(--text-muted)}
+.stat-pill strong{color:#e0e0e0;margin-left:4px}
+.stat-pass{border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.08);color:#6ee7b7}
+.stat-refuse{border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.08);color:#fcd34d}
+.stat-drop{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);color:#fca5a5}
+.stat-dns{border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.08);color:#d8b4fe}
+
+/* Matrix Grid View */
+.matrix-container{display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:12px;margin-top:14px}
+.matrix-card{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:12px;transition:transform .15s, border-color .15s}
+.matrix-card:hover{transform:translateY(-2px);border-color:#38bdf8}
+.matrix-card.card-pass{border-left:4px solid var(--success)}
+.matrix-card.card-refused{border-left:4px solid var(--warning)}
+.matrix-card.card-drop{border-left:4px solid var(--danger)}
+.matrix-card.card-dns{border-left:4px solid var(--purple)}
+.mcard-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.mcard-title{font-weight:700;font-size:12px;color:var(--text-main);font-family:monospace}
+.mcard-cat{font-size:10px;padding:2px 6px;border-radius:4px;background:#1e293b;color:var(--text-muted)}
+.mcard-sub{font-size:11px;color:var(--text-muted);margin-bottom:6px}
+.mcard-diag{font-size:10.5px;color:var(--text-dim);line-height:1.4}
+.mcard-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:6px;border-top:1px solid #1a1d2e}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.b-pass{background:rgba(16,185,129,0.2);color:#34d399}
+.b-refused{background:rgba(245,158,11,0.2);color:#fbbf24}
+.b-drop{background:rgba(239,68,68,0.2);color:#f87171}
+.b-dns{background:rgba(168,85,247,0.2);color:#c084fc}
+.b-proto{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;font-family:monospace;letter-spacing:0.04em}
+.b-proto-tcp{background:rgba(14,165,233,0.18);color:#38bdf8;border:1px solid rgba(14,165,233,0.35)}
+.b-proto-udp{background:rgba(245,158,11,0.18);color:#fbbf24;border:1px solid rgba(245,158,11,0.35)}
+.b-proto-icmp{background:rgba(168,85,247,0.18);color:#c084fc;border:1px solid rgba(168,85,247,0.35)}
+
+/* Table */
+.table-card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:14px}
+.table-controls{padding:10px 14px;display:flex;gap:10px;border-bottom:1px solid var(--border);align-items:center;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{padding:8px 12px;text-align:left;color:var(--text-dim);font-size:10px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:7px 12px;border-bottom:1px solid #0d1015;font-family:"Fira Code","Consolas",monospace;color:var(--text-muted);white-space:nowrap}
+tr:hover td{background:rgba(14,165,233,0.04)}
+
+/* PacketScope styles */
+.drop-zone{background:#141826;border:2px dashed #2a2d3e;border-radius:10px;padding:16px;transition:border-color .2s,background .2s}
+.drop-zone.dragover{border-color:#0ea5e9;background:#0a1628}
+.zone-label{font-size:11px;color:var(--text-dim);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.section-hdr{font-size:10.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:20px;display:flex;align-items:center;gap:8px}
+.section-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+.findings{display:flex;flex-direction:column;gap:6px}
+.finding{border-radius:7px;padding:9px 13px;border-left:3px solid;display:flex;gap:10px;align-items:flex-start}
+.fhigh{background:#160a0a;border-color:#dc2626}
+.fmed{background:#160f00;border-color:#d97706}
+.flow{background:#080f1a;border-color:#0ea5e9}
+.finfo{background:#0d1117;border-color:#374151}
+.sev{font-size:10px;font-weight:700;padding:2px 7px;border-radius:7px;white-space:nowrap}
+.sev-high{background:#450a0a;color:#fca5a5}
+.sev-med{background:#431a00;color:#fcd34d}
+.sev-low{background:#0c1f3d;color:#7dd3fc}
+.sev-info{background:#1a1d2e;color:#6b7280}
+.f-type{font-size:12px;font-weight:700;color:#f9fafb;margin-bottom:2px}
+.f-desc{font-size:12px;color:#94a3b8;font-family:monospace}
+.f-detail{font-size:11px;color:#6b7280;margin-top:2px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+.chart-card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:14px}
+.chart-card h3{font-size:10.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+canvas{display:block;width:100%}
+
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">⬡</div>
+    <div class="header-text">
+      <h1>NetScope Matrix <span style="font-size:11px;font-weight:normal;color:#38bdf8;background:rgba(56,189,248,0.1);padding:2px 8px;border-radius:9999px;">v1.0 Pro</span></h1>
+      <p>主動防火牆連通矩陣 • PacketScope 封包威脅透視 • 一鍵抓包診斷 · by Kerr</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="sysinfo-pill" id="sysInfoBadge">
+      <span>🖥️ 本機主機：<strong id="sysHostname">載入中...</strong></span>
+      <span style="color:#374151">|</span>
+      <span>IP：<strong id="sysLocalIp">...</strong></span>
+    </div>
+    <a href="https://github.com/kerr20801/PacketScope" target="_blank" rel="noopener" class="github-badge">
+      <svg height="14" width="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span>PacketScope</span>
+    </a>
+  </div>
+</div>
+
+<!-- Tabs Navigation -->
+<div class="tabs-nav">
+  <button class="tab-btn active" id="tabBtnMatrix" onclick="switchNavTab('matrix')">🚀 主動連通矩陣 & 防火牆驗收 (Active Matrix)</button>
+  <button class="tab-btn" id="tabBtnScope" onclick="switchNavTab('scope')">🔍 封包威脅透視分析 (PacketScope Engine)</button>
+  <button class="tab-btn" id="tabBtnSniff" onclick="switchNavTab('sniff')">🎯 故障即時抓包診斷 (Probe & Sniff)</button>
+</div>
+
+<div class="main">
+
+  <!-- ==================== TAB 1: 主動連通矩陣 ==================== -->
+  <div id="viewMatrix">
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <h2>🚀 防火牆開通清單貼上即測</h2>
+          <p>支援直接從 Excel 貼上表格資料（逗號、Tab 或空格分隔），支援非同步高並發探測，數秒內完成整批驗收。</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <div style="display:flex;gap:6px;align-items:center;">
+            <label style="font-size:11px;color:var(--text-muted);">協定模式：</label>
+            <select id="probeProtoDefault" class="sinput" style="padding:4px 8px;" onchange="parseMatrixInput()">
+              <option value="auto" selected>自動 (依輸入/Port辨識)</option>
+              <option value="tcp">TCP (強制)</option>
+              <option value="udp">UDP (強制)</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <label style="font-size:11px;color:var(--text-muted);">探測超時：</label>
+            <select id="probeTimeoutSelect" class="sinput" style="padding:4px 8px;">
+              <option value="1500">1.5 秒 (極速)</option>
+              <option value="2500" selected>2.5 秒 (標準)</option>
+              <option value="4000">4.0 秒 (高延遲/跨國)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <textarea id="matrixInput" spellcheck="false" placeholder="格式範例（支援從 Excel 貼上）：
+目標IP或網址, Port, 服務說明, 業務分類, 協定 (選填: tcp / udp / icmp)
+10.0.1.10, 443, 企業入口網 (HTTPS), Web前端, tcp
+10.0.1.20, 1433, MSSQL資料庫主機, 資料庫層, tcp
+8.8.8.8, 53, Google 公共 DNS, 基礎網通, udp
+time.windows.com, 123, Windows 網路時間 NTP 校時, 基礎網通, udp
+10.0.3.50, 161, 核心交換機 SNMP 監控, 網通服務, udp
+1.1.1.1, icmp, Cloudflare Ping 測試, 邊界連通, icmp
+127.0.0.1, 48293, 模擬未開 UDP (收到 ICMP Unreachable), 測試群, udp
+10.255.255.1, 443, 模擬防火牆阻擋 (Silent Drop), 測試群, tcp
+(提示：支援 53/udp 或 udp://8.8.8.8:53 等多種靈活寫法)"></textarea>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnRunProbe" onclick="runActiveProbe()">
+          <span id="probeSpinner" class="spinner hidden"></span>
+          <span id="probeBtnLabel">⚡ 立即執行非同步並發探測</span>
+        </button>
+        <button class="btn btn-secondary" onclick="loadSimulationMatrix()" style="background:linear-gradient(135deg,#065f46,#047857);color:#ecfdf5;border-color:#10b981;" title="免實體設備！一鍵模擬企業全狀態連通矩陣 (含 PASS/RST/DROP/DNS 錯誤)">
+          🎭 一鍵載入仿真驗收結果 (Demo 演示)
+        </button>
+        <button class="btn btn-secondary" onclick="loadMatrixSample()">📋 載入企業工單範例 (含公共可測目標)</button>
+        <button class="btn btn-secondary" onclick="exportMatrixCsv()">📥 匯出驗收清冊 (CSV)</button>
+        <button class="btn btn-secondary" onclick="clearMatrixInput()">🗑️ 清空</button>
+        <span id="matrixParseStats" style="margin-left:auto;font-size:11.5px;color:var(--text-dim);font-family:monospace">已解析 0 筆</span>
+      </div>
+    </div>
+
+    <!-- Probe Results Area -->
+    <div id="matrixResultArea" class="hidden">
+      <!-- Stats bar -->
+      <div class="stats-bar" id="matrixStatsBar"></div>
+
+      <!-- Controls & View Mode -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="matrixSearch" class="sinput" placeholder="🔍 搜尋主機/Port/協定/說明..." oninput="filterMatrixResults()" style="width:180px;">
+          <select id="matrixStatusFilter" class="sinput" onchange="filterMatrixResults()">
+            <option value="">全部狀態</option>
+            <option value="PASS">🟢 通暢 (PASS)</option>
+            <option value="REFUSED">🟠 端口未開 (RST)</option>
+            <option value="DROP">🔴 防火牆阻擋 (DROP)</option>
+            <option value="DNS_ERROR">🟣 DNS解析失敗</option>
+          </select>
+          <select id="matrixProtoFilter" class="sinput" onchange="filterMatrixResults()">
+            <option value="">全部協定</option>
+            <option value="tcp">TCP</option>
+            <option value="udp">UDP</option>
+            <option value="icmp">ICMP</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-secondary btn-sm" id="btnViewGrid" onclick="setMatrixView('grid')">🔲 矩陣方格視圖</button>
+          <button class="btn btn-secondary btn-sm" id="btnViewTable" onclick="setMatrixView('table')">📋 表格明細視圖</button>
+        </div>
+      </div>
+
+      <!-- Grid Matrix View -->
+      <div id="matrixGridView" class="matrix-container"></div>
+
+      <!-- Table View -->
+      <div id="matrixTableView" class="table-card hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>目標主機 / IP</th>
+              <th>Port</th>
+              <th>協定</th>
+              <th>服務說明</th>
+              <th>業務分組</th>
+              <th>狀態</th>
+              <th>延遲 (ms)</th>
+              <th>診斷訊息</th>
+              <th>深度透視</th>
+            </tr>
+          </thead>
+          <tbody id="matrixTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 2: PacketScope 封包威脅分析 ==================== -->
+  <div id="viewScope" class="hidden">
+    <div class="drop-zone" id="drop-zone">
+      <div class="zone-label">
+        <span>貼上 tcpdump 輸出，或拖曳 .txt 檔案（本機純前端運算，資料絕不外傳）</span>
+        <span id="line-count" style="font-family:monospace">0 行</span>
+      </div>
+      <textarea id="inp" spellcheck="false" placeholder="2026-05-23 10:15:32.123456 IP 192.168.1.5.54321 > 8.8.8.8.443: Flags [S], seq 1, win 64240, length 0
+2026-05-23 10:15:32.175432 IP 8.8.8.8.443 > 192.168.1.5.54321: Flags [SA], seq 1, ack 2, win 65535, length 52
+..."></textarea>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">
+      推薦指令：<code>tcpdump -tttt -nn -q &gt; capture.txt</code>&nbsp;或含 flags：<code>tcpdump -tttt -nn &gt; capture.txt</code>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runAnalysis()">▶ 分析封包</button>
+      <button class="btn btn-secondary" onclick="loadPacketSample('mixed')" style="background:#7f1d1d;color:#fecaca;border-color:#ef4444;" title="載入綜合威脅場景 (C2心跳 + 端口掃描 + 巨量外洩 + 流量突波)">
+        🚨 載入綜合威脅範例
+      </button>
+      <button class="btn btn-secondary" onclick="loadPacketSample('normal')" style="background:#064e3b;color:#a7f3d0;border-color:#10b981;" title="載入純正常業務流量 (HTTPS/DNS 正常連線，展示無威脅研判)">
+        🛡️ 載入正常業務流量
+      </button>
+      <button class="btn btn-secondary" onclick="loadPacketSample('ddos')" style="background:#78350f;color:#fde68a;border-color:#f59e0b;" title="載入 SYN Flood 與高危險端口攻擊流量">
+        💥 載入 DDoS 攻擊流量
+      </button>
+      <button class="btn btn-secondary" onclick="clearPacketScope()">🗑️ 清除</button>
+    </div>
+
+    <!-- PacketScope Results -->
+    <div id="results" class="hidden">
+      <div class="stats-bar" id="stats-bar"></div>
+
+      <div class="section-hdr">威脅偵測結果 (AI & 統計規則分析)</div>
+      <div class="findings" id="findings-list"></div>
+
+      <div class="section-hdr">流量視覺化</div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>封包時間軸（每10秒bin）</h3>
+          <canvas id="c-timeline" height="130"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Top 來源 IP（封包數）</h3>
+          <canvas id="c-talkers" height="130"></canvas>
+        </div>
+      </div>
+
+      <div class="section-hdr">封包明細</div>
+      <div class="table-card">
+        <div class="table-controls">
+          <input id="tbl-search" class="sinput" placeholder="搜尋 IP / Port..." oninput="filterTable()">
+          <label style="font-size:10px;color:var(--text-dim);text-transform:uppercase;">協定</label>
+          <select id="proto-filter" class="sinput" style="width:90px" onchange="filterTable()">
+            <option value="">全部</option>
+            <option value="TCP">TCP</option>
+            <option value="UDP">UDP</option>
+            <option value="ICMP">ICMP</option>
+          </select>
+          <label style="font-size:10px;color:var(--text-dim);text-transform:uppercase;">方向</label>
+          <select id="dir-filter" class="sinput" style="width:100px" onchange="filterTable()">
+            <option value="">全部</option>
+            <option value="out">出站（→外部）</option>
+            <option value="in">入站（外部→）</option>
+            <option value="internal">內部</option>
+          </select>
+        </div>
+        <table>
+          <thead><tr>
+            <th>相對時間</th>
+            <th onclick="sortTbl('src')" style="cursor:pointer">來源 IP <span id="sort-src"></span></th>
+            <th>SPort</th>
+            <th onclick="sortTbl('dst')" style="cursor:pointer">目標 IP <span id="sort-dst"></span></th>
+            <th>DPort</th>
+            <th>Proto</th>
+            <th>Flags</th>
+            <th onclick="sortTbl('len')" style="cursor:pointer">Len <span id="sort-len"></span></th>
+          </tr></thead>
+          <tbody id="tbl-body"></tbody>
+        </table>
+        <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border)">
+          <button class="btn btn-secondary btn-sm" id="btn-prev" onclick="prevPage()">◀ 上頁</button>
+          <button class="btn btn-secondary btn-sm" id="btn-next" onclick="nextPage()">下頁 ▶</button>
+          <span id="pg-info"></span>
+          <span style="margin-left:auto" id="row-info"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 3: 故障即時抓包診斷 ==================== -->
+  <div id="viewSniff" class="hidden">
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <h2>🎯 單一連線封包追蹤 (Live Trace & Diagnostics)</h2>
+          <p>當主動探測發現連線超時 (Drop) 或連線被拒絕 (RST) 時，直接在此發送連線並追蹤底層封包交握歷程，或一鍵載入仿真封包體驗完整分析。</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;background:#111522;padding:12px 14px;border-radius:8px;border:1px solid var(--border);">
+        <label style="font-size:12px;color:#38bdf8;font-weight:600;">⚡ 快速預設情境 (免實體設備)：</label>
+        <select id="sniffPresetSelect" class="sinput" style="flex:1;min-width:260px;" onchange="applySniffPreset()">
+          <option value="">-- 請選擇測試情境或真實公共目標 --</option>
+          <option value="real_dns">🌐 真實目標：Google DNS (8.8.8.8:53 UDP - 收到真實 DNS 回應)</option>
+          <option value="real_web">🌐 真實目標：Cloudflare Web (1.1.1.1:443 TCP - 完整三向握手)</option>
+          <option value="real_local">🌐 真實目標：NetScope 本機服務 (127.0.0.1:8900 TCP - 本機握手)</option>
+          <option value="mock_pass">🎭 仿真示範：TCP 三向交握成功 (SYN ➡️ SYN-ACK ➡️ ACK)</option>
+          <option value="mock_rst">🎭 仿真示範：目標服務未啟動 (收到 TCP RST - 甩鍋證明防火牆已通！)</option>
+          <option value="mock_drop">🎭 仿真示範：防火牆阻擋 (Silent Drop 連線逾時)</option>
+          <option value="mock_udp_unreach">🎭 仿真示範：UDP 服務未監聽 (收到 ICMP Port Unreachable)</option>
+        </select>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="loadMockSniffTrace()" style="background:#065f46;color:#a7f3d0;border-color:#059669;">
+          🎭 載入仿真封包追蹤
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:14px;">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">目標主機 / IP：</label>
+          <input type="text" id="sniffHost" class="sinput" style="width:100%" placeholder="例如：192.168.1.20 或 8.8.8.8" value="10.0.1.20">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">目標 Port：</label>
+          <input type="number" id="sniffPort" class="sinput" style="width:100%" placeholder="例如：1433 或 53" value="1433" min="1" max="65535">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">傳輸協定 (Protocol)：</label>
+          <select id="sniffProto" class="sinput" style="width:100%">
+            <option value="tcp" selected>TCP 握手追蹤 (SYN/ACK/RST)</option>
+            <option value="udp">UDP 傳輸追蹤 (Payload/ICMP)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">追蹤封包次數：</label>
+          <select id="sniffCount" class="sinput" style="width:100%">
+            <option value="3" selected>3 次測試</option>
+            <option value="5">5 次測試</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnDoSniff" onclick="doLiveSniff()">
+          <span id="sniffSpinner" class="spinner hidden"></span>
+          <span id="sniffBtnLabel">⚡ 發起連線並擷取封包追蹤</span>
+        </button>
+        <button class="btn btn-secondary" id="btnSendToScope" onclick="sendSniffToScope()" style="display:none;background:#0369a1;color:#fff;">
+          🚀 一鍵傳送至 PacketScope 進行威脅分析
+        </button>
+      </div>
+
+      <!-- Trace Output Box -->
+      <div id="sniffOutputBox" style="margin-top:16px;display:none;">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;display:flex;justify-content:space-between;">
+          <span>擷取到的 tcpdump 格式封包追蹤：</span>
+          <span id="sniffTargetInfo" style="font-family:monospace;color:#38bdf8"></span>
+        </div>
+        <textarea id="sniffResultText" style="height:160px;" readonly></textarea>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ==============================================================================
+// 1. Navigation & App Init
+// ==============================================================================
+let currentNavTab = 'matrix';
+let rawMatrixItems = [];
+let probedResults = [];
+let matrixViewMode = 'grid'; // 'grid' or 'table'
+
+function switchNavTab(tab) {
+  currentNavTab = tab;
+  document.getElementById('tabBtnMatrix').classList.toggle('active', tab === 'matrix');
+  document.getElementById('tabBtnScope').classList.toggle('active', tab === 'scope');
+  document.getElementById('tabBtnSniff').classList.toggle('active', tab === 'sniff');
+
+  document.getElementById('viewMatrix').style.display = tab === 'matrix' ? 'block' : 'none';
+  document.getElementById('viewScope').style.display = tab === 'scope' ? 'block' : 'none';
+  document.getElementById('viewSniff').style.display = tab === 'sniff' ? 'block' : 'none';
+
+  if (tab === 'scope' && _all.length > 0) {
+    requestAnimationFrame(() => {
+      const timeline = buildTimeline(_all);
+      const topSrc = buildTopSrc(_all);
+      drawLine('c-timeline', timeline);
+      drawHBar('c-talkers', topSrc);
+    });
+  }
+}
+
+// Fetch system info
+async function loadSysInfo() {
+  try {
+    const res = await fetch('/api/sysinfo');
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('sysHostname').textContent = data.hostname;
+      document.getElementById('sysLocalIp').textContent = data.ips && data.ips.length ? data.ips.join(', ') : '127.0.0.1';
+    }
+  } catch (e) {
+    document.getElementById('sysHostname').textContent = '本機跳板機';
+    document.getElementById('sysLocalIp').textContent = '127.0.0.1';
+  }
+}
+window.addEventListener('DOMContentLoaded', () => {
+  loadSysInfo();
+  parseMatrixInput();
+});
+
+// ==============================================================================
+// 2. Active Matrix Logic
+// ==============================================================================
+const matrixInput = document.getElementById('matrixInput');
+const matrixParseStats = document.getElementById('matrixParseStats');
+
+function parseMatrixInput() {
+  const text = matrixInput.value.trim();
+  rawMatrixItems = [];
+  if (!text) {
+    matrixParseStats.textContent = '已解析 0 筆';
+    return;
+  }
+
+  const defaultProtoSetting = (document.getElementById('probeProtoDefault') ? document.getElementById('probeProtoDefault').value : 'auto');
+
+  const lines = text.split('\n');
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+
+    // Split by comma, tab, or space
+    const parts = trimmed.split(/,|\t+/).map(p => p.trim());
+    if (parts.length >= 1) {
+      let host = parts[0];
+      let port = 80;
+      let label = parts[2] || '';
+      let category = parts[3] || '一般服務';
+      let explicitProto = parts[4] ? parts[4].toLowerCase() : '';
+      let protocol = '';
+
+      // Check scheme prefix e.g. udp://8.8.8.8:53 or tcp://... or icmp://...
+      if (host.startsWith('udp://')) {
+        explicitProto = 'udp';
+        host = host.replace('udp://', '');
+      } else if (host.startsWith('tcp://')) {
+        explicitProto = 'tcp';
+        host = host.replace('tcp://', '');
+      } else if (host.startsWith('icmp://')) {
+        explicitProto = 'icmp';
+        host = host.replace('icmp://', '');
+      }
+
+      // Check if IP:Port format in host
+      if (host.includes(':') && !host.includes('::')) {
+        const hp = host.split(':');
+        host = hp[0];
+        const portStr = hp[1].toLowerCase();
+        if (portStr.endsWith('/udp') || portStr.endsWith('udp')) {
+          explicitProto = 'udp';
+          port = parseInt(portStr, 10) || 53;
+        } else if (portStr.endsWith('/tcp') || portStr.endsWith('tcp')) {
+          explicitProto = 'tcp';
+          port = parseInt(portStr, 10) || 80;
+        } else {
+          port = parseInt(portStr, 10) || 80;
+        }
+      } else if (parts.length >= 2) {
+        const p2 = parts[1].toLowerCase();
+        if (p2 === 'icmp' || p2 === 'ping') {
+          explicitProto = 'icmp';
+          port = 0;
+        } else if (p2.endsWith('/udp') || p2.endsWith('udp')) {
+          explicitProto = 'udp';
+          port = parseInt(p2, 10) || 53;
+        } else if (p2.endsWith('/tcp') || p2.endsWith('tcp')) {
+          explicitProto = 'tcp';
+          port = parseInt(p2, 10) || 80;
+        } else {
+          port = parseInt(p2, 10) || 80;
+        }
+      }
+
+      // Check if other columns indicate protocol
+      if (!explicitProto && parts.length >= 3) {
+        const checkCols = [parts[2], parts[3], parts[4]].map(c => (c || '').toLowerCase().trim());
+        if (checkCols.includes('udp')) explicitProto = 'udp';
+        else if (checkCols.includes('icmp') || checkCols.includes('ping')) explicitProto = 'icmp';
+        else if (checkCols.includes('tcp')) explicitProto = 'tcp';
+      }
+
+      // Determine final protocol
+      if (explicitProto) {
+        protocol = explicitProto;
+      } else if (defaultProtoSetting === 'udp') {
+        protocol = 'udp';
+      } else if (defaultProtoSetting === 'tcp') {
+        protocol = 'tcp';
+      } else {
+        // Auto mode: check known UDP ports
+        const udpPorts = [53, 123, 161, 162, 514, 67, 68, 69, 500, 4500, 1194, 51820];
+        if (udpPorts.includes(port)) {
+          protocol = 'udp';
+        } else {
+          protocol = 'tcp';
+        }
+      }
+
+      if (host) {
+        rawMatrixItems.push({ host, port, protocol, label: label || `${host}:${port}`, category });
+      }
+    }
+  });
+
+  const tcpCount = rawMatrixItems.filter(i => i.protocol === 'tcp').length;
+  const udpCount = rawMatrixItems.filter(i => i.protocol === 'udp').length;
+  const icmpCount = rawMatrixItems.filter(i => i.protocol === 'icmp').length;
+  matrixParseStats.textContent = `已解析 ${rawMatrixItems.length} 筆 (TCP: ${tcpCount}, UDP: ${udpCount}, ICMP: ${icmpCount})`;
+}
+matrixInput.addEventListener('input', parseMatrixInput);
+
+function loadMatrixSample() {
+  matrixInput.value = `# --- 公共可測真實服務 (保證本機可測通 PASS) ---
+1.1.1.1, 443, Cloudflare Web (HTTPS), 公共Web, tcp
+8.8.8.8, 53, Google 公共 DNS 解析, 基礎網通, udp
+time.windows.com, 123, Windows 網路時間 NTP 校時, 基礎網通, udp
+1.1.1.1, icmp, Cloudflare 外網 Ping, 邊界連通, icmp
+127.0.0.1, 8900, NetScope 本機 Web 服務, 本機連線, tcp
+
+# --- 內部應用與資料庫層 (若無內網將呈現逾時或拒絕) ---
+10.0.1.10, 443, 企業入口 Web 門戶 (HTTPS), Web前端, tcp
+10.0.2.20, 1433, MSSQL 主資料庫, 資料庫層, tcp
+10.0.2.30, 6379, Redis Session 快取, 快取層, tcp
+
+# --- 模擬測試 (未開連接埠 RST / ICMP Unreachable / 防火牆阻擋) ---
+127.0.0.1, 48293, 模擬未開 UDP 服務 (收到 ICMP Unreachable), 測試群, udp
+10.255.255.1, 443, 模擬防火牆阻擋 (Silent Drop 逾時), 測試群, tcp`;
+  parseMatrixInput();
+}
+
+// 🎭 免實體設備！一鍵載入全狀態仿真矩陣結果 (Demo 演示)
+function loadSimulationMatrix() {
+  matrixInput.value = `# --- 企業應用與資料庫層 (TCP) ---
+10.0.1.10, 443, 企業入口 Web 門戶 (HTTPS), Web前端, tcp
+10.0.1.15, 80, HTTP 重導向服務, Web前端, tcp
+10.0.1.12, 8080, 微服務 API Gateway, API服務, tcp
+10.0.2.20, 1433, MSSQL 主資料庫, 資料庫層, tcp
+10.0.2.30, 6379, Redis Session 快取叢集, 快取層, tcp
+10.0.2.25, 3306, MySQL 報表資料庫, 資料庫層, tcp
+
+# --- 基礎架構與網通服務 (UDP / ICMP) ---
+8.8.8.8, 53, Google 公共 DNS 解析, 基礎架構, udp
+time.windows.com, 123, Windows 網路時間 NTP 校時, 基礎架構, udp
+10.0.3.50, 161, 核心交換機 SNMP 監控, 網通服務, udp
+10.0.3.60, 514, SIEM 資安日誌收容 (Syslog), 資安維運, udp
+1.1.1.1, icmp, Cloudflare 邊界節點 Ping, 外部連通, icmp
+
+# --- 異常與防火牆阻擋診斷 (測試群) ---
+127.0.0.1, 48293, 模擬未開 UDP 服務 (ICMP Unreachable), 測試群, udp
+10.255.255.1, 443, 模擬防火牆丟包 (Silent Drop), 測試群, tcp
+198.51.100.25, 8443, 外部黑名單伺服器 (DROP), 測試群, tcp
+erp-legacy-cluster.corp.internal, 8080, 舊版 ERP 主機 (已廢棄下線), 核心系統, tcp
+db-standby-node.invalid.domain, 1521, Oracle 備份主機 (無DNS記錄), 資料庫層, tcp`;
+
+  parseMatrixInput();
+
+  probedResults = [
+    { host: '10.0.1.10', ip: '10.0.1.10', port: 443, protocol: 'tcp', label: '企業入口 Web 門戶 (HTTPS)', category: 'Web前端', status: 'PASS', latencyMs: 12, message: 'TCP Handshake 握手成功 (12ms)' },
+    { host: '10.0.1.15', ip: '10.0.1.15', port: 80, protocol: 'tcp', label: 'HTTP 重導向服務', category: 'Web前端', status: 'PASS', latencyMs: 8, message: 'TCP Handshake 握手成功 (8ms)' },
+    { host: '10.0.1.12', ip: '10.0.1.12', port: 8080, protocol: 'tcp', label: '微服務 API Gateway', category: 'API服務', status: 'PASS', latencyMs: 6, message: 'TCP Handshake 握手成功 (6ms)' },
+    { host: '8.8.8.8', ip: '8.8.8.8', port: 53, protocol: 'udp', label: 'Google 公共 DNS 解析', category: '基礎架構', status: 'PASS', latencyMs: 19, message: 'UDP 握手/回應成功 (收到 48 位元組回應，延遲 19ms)' },
+    { host: 'time.windows.com', ip: '51.145.123.29', port: 123, protocol: 'udp', label: 'Windows 網路時間 NTP 校時', category: '基礎架構', status: 'PASS', latencyMs: 35, message: 'UDP 握手/回應成功 (收到 48 位元組回應，延遲 35ms)' },
+    { host: '1.1.1.1', ip: '1.1.1.1', port: 0, protocol: 'icmp', label: 'Cloudflare 邊界節點 Ping', category: '外部連通', status: 'PASS', latencyMs: 14, message: 'Ping 回應正常 (14ms)' },
+    { host: '10.0.3.50', ip: '10.0.3.50', port: 161, protocol: 'udp', label: '核心交換機 SNMP 監控', category: '網通服務', status: 'PASS', latencyMs: 11, message: 'UDP 握手/回應成功 (收到 38 位元組 SNMP PDU，延遲 11ms)' },
+
+    // REFUSED (RST / ICMP Unreachable)
+    { host: '10.0.2.20', ip: '10.0.2.20', port: 1433, protocol: 'tcp', label: 'MSSQL 主資料庫', category: '資料庫層', status: 'REFUSED', latencyMs: 15, message: '防火牆已開通，但連線被拒絕 (收到 TCP RST，目標主機未監聽 Port 1433 - 證明非防火牆問題)' },
+    { host: '10.0.2.30', ip: '10.0.2.30', port: 6379, protocol: 'tcp', label: 'Redis Session 快取叢集', category: '快取層', status: 'REFUSED', latencyMs: 9, message: '防火牆已開通，但連線被拒絕 (收到 TCP RST，目標主機未監聽 Port 6379)' },
+    { host: '127.0.0.1', ip: '127.0.0.1', port: 48293, protocol: 'udp', label: '模擬未開 UDP 服務 (ICMP Unreachable)', category: '測試群', status: 'REFUSED', latencyMs: 12, message: '防火牆已開通，但收到 ICMP Port Unreachable (目標主機存活但無服務監聽 UDP Port 48293)' },
+
+    // DROP (Firewall Timeout / Packet Drop)
+    { host: '10.0.2.25', ip: '10.0.2.25', port: 3306, protocol: 'tcp', label: 'MySQL 報表資料庫', category: '資料庫層', status: 'DROP', latencyMs: 2500, message: '連線逾時 (防火牆未開通或路由丟包 Silent Drop)' },
+    { host: '10.0.3.60', ip: '10.0.3.60', port: 514, protocol: 'udp', label: 'SIEM 資安日誌收容 (Syslog)', category: '資安維運', status: 'DROP', latencyMs: 2500, message: 'UDP 逾時無回應 (未收到回應或 ICMP 回覆，可能被防火牆丟包或為單向 UDP 服務)' },
+    { host: '10.255.255.1', ip: '10.255.255.1', port: 443, protocol: 'tcp', label: '模擬防火牆丟包 (Silent Drop)', category: '測試群', status: 'DROP', latencyMs: 2500, message: '連線逾時 (防火牆未開通或路由丟包 Silent Drop)' },
+    { host: '198.51.100.25', ip: '198.51.100.25', port: 8443, protocol: 'tcp', label: '外部黑名單伺服器 (DROP)', category: '測試群', status: 'DROP', latencyMs: 2500, message: '連線逾時 (防火牆未開通或路由丟包 Silent Drop)' },
+
+    // DNS_ERROR
+    { host: 'erp-legacy-cluster.corp.internal', ip: '', port: 8080, protocol: 'tcp', label: '舊版 ERP 主機 (已廢棄下線)', category: '核心系統', status: 'DNS_ERROR', latencyMs: 0, message: 'DNS 解析失敗 (無法解析主機名稱)' },
+    { host: 'db-standby-node.invalid.domain', ip: '', port: 1521, protocol: 'tcp', label: 'Oracle 備份主機 (無DNS記錄)', category: '資料庫層', status: 'DNS_ERROR', latencyMs: 0, message: 'DNS 解析失敗 (無法解析主機名稱)' }
+  ];
+
+  const summary = {
+    total: probedResults.length,
+    pass: probedResults.filter(i => i.status === 'PASS').length,
+    refused: probedResults.filter(i => i.status === 'REFUSED').length,
+    drop: probedResults.filter(i => i.status === 'DROP').length,
+    dnsError: probedResults.filter(i => i.status === 'DNS_ERROR').length
+  };
+
+  renderMatrixStats(summary, 128);
+  renderMatrixCards(probedResults);
+  renderMatrixTable(probedResults);
+
+  const resArea = document.getElementById('matrixResultArea');
+  resArea.classList.remove('hidden');
+  resArea.scrollIntoView({ behavior: 'smooth' });
+}
+
+function clearMatrixInput() {
+  matrixInput.value = '';
+  parseMatrixInput();
+}
+
+async function runActiveProbe() {
+  if (rawMatrixItems.length === 0) {
+    alert('請先輸入或載入至少一筆探測目標！');
+    return;
+  }
+
+  const timeoutMs = parseInt(document.getElementById('probeTimeoutSelect').value, 10);
+  const btn = document.getElementById('btnRunProbe');
+  const spinner = document.getElementById('probeSpinner');
+  const label = document.getElementById('probeBtnLabel');
+
+  btn.disabled = true;
+  spinner.classList.remove('hidden');
+  label.textContent = `正在並發探測 ${rawMatrixItems.length} 個目標...`;
+
+  try {
+    const res = await fetch('/api/probe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targets: rawMatrixItems, timeoutMs })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      probedResults = data.results || [];
+      renderMatrixStats(data.summary, data.totalTimeMs);
+      renderMatrixCards(probedResults);
+      renderMatrixTable(probedResults);
+      document.getElementById('matrixResultArea').classList.remove('hidden');
+      document.getElementById('matrixResultArea').scrollIntoView({ behavior: 'smooth' });
+    } else {
+      alert('探測失敗：' + data.message);
+    }
+  } catch (err) {
+    alert('探測異常：' + err.message);
+  } finally {
+    btn.disabled = false;
+    spinner.classList.add('hidden');
+    label.textContent = '⚡ 立即執行非同步並發探測';
+  }
+}
+
+function renderMatrixStats(s, timeMs) {
+  const bar = document.getElementById('matrixStatsBar');
+  bar.innerHTML = `
+    <div class="stat-pill">總探測 <strong>${s.total} 筆</strong></div>
+    <div class="stat-pill stat-pass">🟢 通暢 (PASS) <strong>${s.pass}</strong></div>
+    <div class="stat-pill stat-refuse">🟠 服務未開 (RST) <strong>${s.refused}</strong></div>
+    <div class="stat-pill stat-drop">🔴 防火牆阻擋 (DROP) <strong>${s.drop}</strong></div>
+    <div class="stat-pill stat-dns">🟣 DNS 失敗 <strong>${s.dnsError}</strong></div>
+    <div class="stat-pill" style="margin-left:auto;">⏱️ 總耗時 <strong>${timeMs} ms</strong></div>
+  `;
+}
+
+function setMatrixView(mode) {
+  matrixViewMode = mode;
+  document.getElementById('matrixGridView').style.display = mode === 'grid' ? 'grid' : 'none';
+  document.getElementById('matrixTableView').style.display = mode === 'table' ? 'block' : 'none';
+  document.getElementById('btnViewGrid').classList.toggle('btn-primary', mode === 'grid');
+  document.getElementById('btnViewTable').classList.toggle('btn-primary', mode === 'table');
+}
+
+function filterMatrixResults() {
+  const q = document.getElementById('matrixSearch').value.toLowerCase().trim();
+  const st = document.getElementById('matrixStatusFilter').value;
+  const pr = document.getElementById('matrixProtoFilter') ? document.getElementById('matrixProtoFilter').value.toLowerCase() : '';
+
+  const filtered = probedResults.filter(item => {
+    if (st && item.status !== st) return false;
+    if (pr && item.protocol !== pr) return false;
+    if (!q) return true;
+    return item.host.toLowerCase().includes(q) ||
+           (item.ip && item.ip.includes(q)) ||
+           String(item.port).includes(q) ||
+           item.protocol.toLowerCase().includes(q) ||
+           item.label.toLowerCase().includes(q) ||
+           item.category.toLowerCase().includes(q) ||
+           item.message.toLowerCase().includes(q);
+  });
+
+  renderMatrixCards(filtered);
+  renderMatrixTable(filtered);
+}
+
+function renderMatrixCards(items) {
+  const container = document.getElementById('matrixGridView');
+  if (!items.length) {
+    container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#64748b; padding:20px;">無符合條件之項目</div>';
+    return;
+  }
+
+  container.innerHTML = items.map(item => {
+    let cardClass = 'card-pass';
+    let badgeHtml = '<span class="badge b-pass">PASS</span>';
+    if (item.status === 'REFUSED') {
+      cardClass = 'card-refused';
+      badgeHtml = '<span class="badge b-refused">PORT CLOSED (RST)</span>';
+    } else if (item.status === 'DROP') {
+      cardClass = 'card-drop';
+      badgeHtml = '<span class="badge b-drop">FIREWALL DROP</span>';
+    } else if (item.status === 'DNS_ERROR') {
+      cardClass = 'card-dns';
+      badgeHtml = '<span class="badge b-dns">DNS ERROR</span>';
+    }
+
+    const protoClass = `b-proto-${item.protocol}`;
+    const protoBadge = `<span class="b-proto ${protoClass}">${item.protocol.toUpperCase()}</span>`;
+    const portDisplay = item.protocol === 'icmp' ? 'ICMP Ping' : `Port ${item.port}`;
+
+    return `
+      <div class="matrix-card ${cardClass}">
+        <div class="mcard-header">
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${protoBadge}
+            <span class="mcard-title">${item.host}</span>
+          </div>
+          ${badgeHtml}
+        </div>
+        <div class="mcard-sub">
+          <span class="mcard-cat">${item.category}</span>
+          <span style="font-family:monospace;margin-left:6px;color:#38bdf8">${portDisplay}</span>
+          ${item.latencyMs > 0 ? `<span style="float:right;font-size:10px;color:#a3e635">${item.latencyMs}ms</span>` : ''}
+        </div>
+        <div style="font-size:11.5px;color:#e2e8f0;margin-bottom:4px;font-weight:600;">${item.label}</div>
+        <div class="mcard-diag">${item.message}</div>
+        <div class="mcard-footer">
+          <span style="font-size:10px;color:var(--text-dim);font-family:monospace">IP: ${item.ip || '未解析'}</span>
+          <button class="btn btn-secondary btn-sm" onclick="sendToSniffTab('${item.host}', ${item.port}, '${item.protocol}')" title="針對此目標發起封包追蹤">
+            🔍 抓包診斷
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMatrixTable(items) {
+  const tbody = document.getElementById('matrixTableBody');
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#64748b;">無項目</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = items.map((item, idx) => {
+    let badgeHtml = '<span class="badge b-pass">PASS</span>';
+    if (item.status === 'REFUSED') badgeHtml = '<span class="badge b-refused">RST</span>';
+    else if (item.status === 'DROP') badgeHtml = '<span class="badge b-drop">DROP</span>';
+    else if (item.status === 'DNS_ERROR') badgeHtml = '<span class="badge b-dns">DNS_ERR</span>';
+
+    const protoClass = `b-proto-${item.protocol}`;
+    const protoBadge = `<span class="b-proto ${protoClass}">${item.protocol.toUpperCase()}</span>`;
+
+    return `
+      <tr>
+        <td style="color:var(--text-dim)">${idx + 1}</td>
+        <td><strong>${item.host}</strong> ${item.ip && item.ip !== item.host ? `<span style="font-size:10px;color:var(--text-dim)">(${item.ip})</span>` : ''}</td>
+        <td>${item.port || '-'}</td>
+        <td>${protoBadge}</td>
+        <td>${item.label}</td>
+        <td><span style="background:#1e293b;padding:2px 6px;border-radius:4px;font-size:10.5px;">${item.category}</span></td>
+        <td>${badgeHtml}</td>
+        <td style="color:${item.latencyMs < 50 ? '#4ade80' : '#fbbf24'}">${item.latencyMs ? item.latencyMs + 'ms' : '-'}</td>
+        <td style="font-size:11px;color:var(--text-muted);">${item.message}</td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="sendToSniffTab('${item.host}', ${item.port}, '${item.protocol}')">🔍 抓包</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Export CSV
+function exportMatrixCsv() {
+  if (!probedResults.length) {
+    alert('請先執行探測後再匯出結果清單！');
+    return;
+  }
+  const headers = ['目標主機', '解析IP', 'Port', '協定', '服務說明', '業務分組', '連線狀態', '延遲(ms)', '診斷詳細訊息'];
+  const rows = probedResults.map(r => [r.host, r.ip, r.port, r.protocol, r.label, r.category, r.status, r.latencyMs, r.message]);
+  const filename = `NetScope_防火牆驗收報表_${new Date().toISOString().slice(0,10)}.csv`;
+  exportToCsvFile(filename, headers, rows);
+}
+
+function exportToCsvFile(filename, headers, rows) {
+  let csv = '\uFEFF';
+  csv += headers.map(h => `"${('' + h).replace(/"/g, '""')}"`).join(',') + '\r\n';
+  rows.forEach(r => {
+    csv += r.map(c => `"${('' + (c !== null && c !== undefined ? c : '')).replace(/"/g, '""')}"`).join(',') + '\r\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Send to Sniff Tab
+function sendToSniffTab(host, port, proto) {
+  document.getElementById('sniffHost').value = host;
+  document.getElementById('sniffPort').value = port || 80;
+  if (document.getElementById('sniffProto')) {
+    document.getElementById('sniffProto').value = (proto === 'udp' ? 'udp' : 'tcp');
+  }
+  switchNavTab('sniff');
+  document.getElementById('sniffOutputBox').style.display = 'none';
+  document.getElementById('btnSendToScope').style.display = 'none';
+}
+
+// ==============================================================================
+// 3. Tab 3: Live Sniff & Trace Diagnostic
+// ==============================================================================
+let latestSniffText = '';
+
+async function doLiveSniff() {
+  const host = document.getElementById('sniffHost').value.trim();
+  const port = parseInt(document.getElementById('sniffPort').value, 10) || 80;
+  const count = parseInt(document.getElementById('sniffCount').value, 10) || 3;
+  const proto = document.getElementById('sniffProto') ? document.getElementById('sniffProto').value : 'tcp';
+
+  if (!host) {
+    alert('請輸入目標主機或 IP！');
+    return;
+  }
+
+  const btn = document.getElementById('btnDoSniff');
+  const spinner = document.getElementById('sniffSpinner');
+  const label = document.getElementById('sniffBtnLabel');
+
+  btn.disabled = true;
+  spinner.classList.remove('hidden');
+  label.textContent = `正在連線 ${proto.toUpperCase()} ${host}:${port} 並擷取底層封包...`;
+
+  try {
+    const res = await fetch('/api/trace-packets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ host, port, count, protocol: proto })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      latestSniffText = data.tcpdumpText;
+      document.getElementById('sniffResultText').value = data.tcpdumpText;
+      document.getElementById('sniffTargetInfo').textContent = data.target;
+      document.getElementById('sniffOutputBox').style.display = 'block';
+      document.getElementById('btnSendToScope').style.display = 'inline-flex';
+    } else {
+      alert('封包擷取失敗：' + data.message);
+    }
+  } catch (err) {
+    alert('封包擷取異常：' + err.message);
+  } finally {
+    btn.disabled = false;
+    spinner.classList.add('hidden');
+    label.textContent = '⚡ 發起連線並擷取封包追蹤';
+  }
+}
+
+function applySniffPreset() {
+  const sel = document.getElementById('sniffPresetSelect').value;
+  if (!sel) return;
+
+  if (sel === 'real_dns') {
+    document.getElementById('sniffHost').value = '8.8.8.8';
+    document.getElementById('sniffPort').value = 53;
+    document.getElementById('sniffProto').value = 'udp';
+  } else if (sel === 'real_web') {
+    document.getElementById('sniffHost').value = '1.1.1.1';
+    document.getElementById('sniffPort').value = 443;
+    document.getElementById('sniffProto').value = 'tcp';
+  } else if (sel === 'real_local') {
+    document.getElementById('sniffHost').value = '127.0.0.1';
+    document.getElementById('sniffPort').value = 8900;
+    document.getElementById('sniffProto').value = 'tcp';
+  } else if (sel === 'mock_pass') {
+    document.getElementById('sniffHost').value = '10.0.1.10';
+    document.getElementById('sniffPort').value = 443;
+    document.getElementById('sniffProto').value = 'tcp';
+    loadMockSniffTrace('mock_pass');
+  } else if (sel === 'mock_rst') {
+    document.getElementById('sniffHost').value = '10.0.2.20';
+    document.getElementById('sniffPort').value = 1433;
+    document.getElementById('sniffProto').value = 'tcp';
+    loadMockSniffTrace('mock_rst');
+  } else if (sel === 'mock_drop') {
+    document.getElementById('sniffHost').value = '10.255.255.1';
+    document.getElementById('sniffPort').value = 443;
+    document.getElementById('sniffProto').value = 'tcp';
+    loadMockSniffTrace('mock_drop');
+  } else if (sel === 'mock_udp_unreach') {
+    document.getElementById('sniffHost').value = '10.0.3.50';
+    document.getElementById('sniffPort').value = 48293;
+    document.getElementById('sniffProto').value = 'udp';
+    loadMockSniffTrace('mock_udp_unreach');
+  }
+}
+
+function loadMockSniffTrace(type) {
+  const host = document.getElementById('sniffHost').value.trim() || '10.0.1.20';
+  const port = document.getElementById('sniffPort').value || 1433;
+  const proto = document.getElementById('sniffProto').value || 'tcp';
+  const selType = type || document.getElementById('sniffPresetSelect').value || 'mock_pass';
+
+  const now = new Date();
+  const formatTime = (dt) => {
+    return dt.toISOString().replace('T', ' ').replace('Z', '').replace(/(\.\d{3})\d*/, '$1') + '000';
+  };
+
+  const lines = [];
+  const localIp = '192.168.1.100';
+  const clientPort = Math.floor(Math.random() * 15000) + 50000;
+
+  if (selType === 'mock_pass' || selType === 'real_web' || (selType.startsWith('real') && proto === 'tcp')) {
+    const t1 = new Date(now.getTime());
+    const t2 = new Date(now.getTime() + 15);
+    const t3 = new Date(now.getTime() + 18);
+    lines.push(`${formatTime(t1)} IP ${localIp}.${clientPort} > ${host}.${port}: Flags [S], seq 1, win 64240, length 0`);
+    lines.push(`${formatTime(t2)} IP ${host}.${port} > ${localIp}.${clientPort}: Flags [SA], seq 1, ack 2, win 65535, length 0`);
+    lines.push(`${formatTime(t3)} IP ${localIp}.${clientPort} > ${host}.${port}: Flags [A], seq 2, ack 2, win 64240, length 0`);
+    latestSniffText = lines.join('\n');
+    document.getElementById('sniffTargetInfo').textContent = `TCP ${host}:${port} (🟢 握手成功)`;
+  } else if (selType === 'mock_rst') {
+    const t1 = new Date(now.getTime());
+    const t2 = new Date(now.getTime() + 12);
+    lines.push(`${formatTime(t1)} IP ${localIp}.${clientPort} > ${host}.${port}: Flags [S], seq 1, win 64240, length 0`);
+    lines.push(`${formatTime(t2)} IP ${host}.${port} > ${localIp}.${clientPort}: Flags [R], seq 1, win 0, length 0`);
+    latestSniffText = lines.join('\n');
+    document.getElementById('sniffTargetInfo').textContent = `TCP ${host}:${port} (🟠 收到 RST 拒絕 - 證明防火牆已開通)`;
+  } else if (selType === 'mock_drop') {
+    const t1 = new Date(now.getTime());
+    lines.push(`${formatTime(t1)} IP ${localIp}.${clientPort} > ${host}.${port}: Flags [S], seq 1, win 64240, length 0`);
+    lines.push(`# [TIMEOUT] No response from ${host}.${port} after 1500ms (Firewall Drop / Unreachable)`);
+    latestSniffText = lines.join('\n');
+    document.getElementById('sniffTargetInfo').textContent = `TCP ${host}:${port} (🔴 防火牆丟包 / 逾時)`;
+  } else if (selType === 'mock_udp_unreach') {
+    const t1 = new Date(now.getTime());
+    const t2 = new Date(now.getTime() + 14);
+    lines.push(`${formatTime(t1)} IP ${localIp}.${clientPort} > ${host}.${port}: UDP, length 32`);
+    lines.push(`${formatTime(t2)} IP ${host} > ${localIp}: ICMP ${host} udp port ${port} unreachable, length 36`);
+    latestSniffText = lines.join('\n');
+    document.getElementById('sniffTargetInfo').textContent = `UDP ${host}:${port} (🟠 ICMP Unreachable - 防火牆通但服務未開)`;
+  } else {
+    const t1 = new Date(now.getTime());
+    const t2 = new Date(now.getTime() + 20);
+    lines.push(`${formatTime(t1)} IP ${localIp}.${clientPort} > ${host}.${port}: UDP, length 32`);
+    lines.push(`${formatTime(t2)} IP ${host}.${port} > ${localIp}.${clientPort}: UDP, length 84`);
+    latestSniffText = lines.join('\n');
+    document.getElementById('sniffTargetInfo').textContent = `UDP ${host}:${port} (🟢 成功回應)`;
+  }
+
+  document.getElementById('sniffResultText').value = latestSniffText;
+  document.getElementById('sniffOutputBox').style.display = 'block';
+  document.getElementById('btnSendToScope').style.display = 'inline-flex';
+}
+
+function sendSniffToScope() {
+  if (!latestSniffText) return;
+  document.getElementById('inp').value = latestSniffText;
+  updateLineCount(latestSniffText);
+  switchNavTab('scope');
+  runAnalysis();
+}
+
+// ==============================================================================
+// 4. PacketScope Core Engine (by Kerr)
+// ==============================================================================
+const isPrivate = ip => {
+  if (!ip) return false;
+  if (ip === '[IPv6]') return false;
+  if (ip.includes(':')) {
+    const s = ip.toLowerCase().split('%')[0];
+    if (s === '::1' || s === '::') return true;
+    if (/^f[cd]/.test(s)) return true;
+    if (/^fe[89ab]/.test(s)) return true;
+    return false;
+  }
+  const p = ip.split('.').map(Number);
+  if (p.length !== 4 || p.some(isNaN)) return false;
+  return p[0]===10 || (p[0]===172 && p[1]>=16 && p[1]<=31) || (p[0]===192 && p[1]===168) || p[0]===127 || (p[0]===169 && p[1]===254) || (p[0]===100 && p[1]>=64 && p[1]<=127);
+};
+const RFC1918 = isPrivate;
+
+const mean   = a => a.reduce((s,x)=>s+x,0)/a.length;
+const vari   = a => { const m=mean(a); return a.reduce((s,x)=>s+(x-m)**2,0)/a.length; };
+const std    = a => Math.sqrt(vari(a));
+const median = a => { const s=[...a].sort((x,y)=>x-y); const n=s.length; return n ? (n%2 ? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2) : 0; };
+const mad    = a => { const m=median(a); return median(a.map(x=>Math.abs(x-m))); };
+const shannon = s => {
+  if (!s) return 0;
+  const f = {};
+  for (const ch of s) f[ch] = (f[ch]||0)+1;
+  return -Object.values(f).reduce((h,n)=>{const pr=n/s.length; return h+pr*Math.log2(pr);},0);
+};
+const fmtB = b => b<1024?b+'B':b<1048576?(b/1024).toFixed(1)+'KB':(b/1048576).toFixed(2)+'MB';
+const fmtT = s => s<60?s.toFixed(2)+'s':s<3600?(s/60).toFixed(1)+'m':(s/3600).toFixed(2)+'h';
+
+function parseTs(s) {
+  if (/^\d{4}-\d{2}-\d{2} /.test(s)) return Date.parse(s.replace(' ','T')+'Z')/1e3;
+  if (/^\d{2}:\d{2}:\d{2}/.test(s)) { const [h,m,sec]=s.split(':'); return +h*3600+ +m*60+parseFloat(sec); }
+  return parseFloat(s);
+}
+
+function parseLine(raw) {
+  raw = raw.trim();
+  if (!raw || raw[0]==='#') return null;
+  const hasIP = raw.includes(' IP ') || raw.includes(' IP6 ');
+  if (!hasIP) return null;
+
+  const tsM = raw.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+|\d{2}:\d{2}:\d{2}\.\d+|\d+\.\d{4,})/);
+  if (!tsM) return null;
+  const ts = parseTs(tsM[1]);
+
+  let src_ip='', src_port=0, dst_ip='', dst_port=0, proto='TCP', flags='', length=0;
+
+  const m4 = raw.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\.(\d+)\s*>\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\.(\d+)/);
+  if (m4) {
+    [,src_ip,src_port,dst_ip,dst_port] = m4;
+    src_port=+src_port; dst_port=+dst_port;
+  } else {
+    const m6 = raw.includes(' IP6 ') ? raw.match(/\s([0-9a-fA-F:]*:[0-9a-fA-F:]*(?:%\w+)?)\.(\d+)\s*>\s*([0-9a-fA-F:]*:[0-9a-fA-F:]*(?:%\w+)?)\.(\d+)/) : null;
+    if (m6) {
+      [,src_ip,src_port,dst_ip,dst_port] = m6;
+      src_port=+src_port; dst_port=+dst_port;
+    } else {
+      const m4n = raw.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s*>\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+      if (m4n) { [,src_ip,dst_ip]=m4n; proto='ICMP'; }
+      else if (raw.includes(' IP6 ')) {
+        const m6n = raw.match(/\s([0-9a-fA-F:]*:[0-9a-fA-F:]*)\s*>\s*([0-9a-fA-F:]*:[0-9a-fA-F:]*)/);
+        if (m6n) { [,src_ip,dst_ip]=m6n; proto='IPv6'; }
+        else { src_ip='[IPv6]'; dst_ip='[IPv6]'; proto='IPv6'; }
+      }
+      else return null;
+    }
+  }
+
+  if (raw.includes(': ICMP') || raw.includes(' ICMP ')) proto='ICMP';
+  else if (raw.includes(': UDP') || raw.match(/\bUDP\b/)) proto='UDP';
+  else if (proto!=='ICMP') proto='TCP';
+
+  const fm = raw.match(/Flags \[([^\]]+)\]/);
+  if (fm) flags=fm[1];
+
+  const lm = raw.match(/length (\d+)/);
+  if (lm) length=+lm[1];
+
+  let qname = '';
+  const qm = raw.match(/\s(?:A|AAAA|CNAME|MX|TXT|PTR)\?\s+([a-zA-Z0-9_\-\.]+)/);
+  if (qm) qname = qm[1].replace(/\.$/, '');
+
+  return { ts, src_ip, src_port, dst_ip, dst_port, proto, flags, length, qname, raw };
+}
+
+function parseCapture(text) {
+  const pkts = [];
+  for (const line of text.split('\n')) {
+    const p = parseLine(line);
+    if (p) pkts.push(p);
+  }
+  if (!pkts.length) return pkts;
+  const t0 = pkts[0].ts;
+  for (const p of pkts) p.rel = +(p.ts - t0).toFixed(6);
+  return pkts;
+}
+
+// 1. Beaconing (C2 Heartbeat)
+function detectBeaconing(pkts) {
+  const convs = {};
+  for (const p of pkts) {
+    if (p.proto!=='TCP'&&p.proto!=='UDP') continue;
+    const k = `${p.src_ip}→${p.dst_ip}:${p.dst_port}`;
+    (convs[k]||(convs[k]={src:p.src_ip,dst:p.dst_ip,dp:p.dst_port,ts:[]})).ts.push(p.rel);
+  }
+  const out=[];
+  for (const [,c] of Object.entries(convs)) {
+    if (c.ts.length<6) continue;
+    c.ts.sort((a,b)=>a-b);
+    const ivs=[];
+    for (let i=1;i<c.ts.length;i++) ivs.push(c.ts[i]-c.ts[i-1]);
+    const m=mean(ivs), sd=std(ivs);
+    const med=median(ivs);
+    if (med<1) continue;
+    const srt=[...ivs].sort((a,b)=>a-b);
+    const keep=srt.slice(0, Math.max(3, Math.ceil(srt.length*0.85)));
+    const tcv=std(keep)/mean(keep);
+    const cv=sd/m;
+    const rcv=Math.min(tcv,cv);
+    if (tcv<0.20 || cv<0.25) {
+      const ext=!RFC1918(c.dst)&&c.dst!=='[IPv6]';
+      out.push({
+        severity: ext?'high':'medium',
+        type:'Beaconing / C2 心跳',
+        desc:`${c.src} → ${c.dst}:${c.dp}`,
+        detail:`間隔中位數 ${med.toFixed(1)}s（截尾CV=${tcv.toFixed(3)}／原CV=${cv.toFixed(3)}），共 ${c.ts.length} 次連線${ext?' ⚠ 外部IP':''}`,
+        score: (1/Math.max(rcv,0.001))*(ext?2:1)
+      });
+    }
+  }
+  return out.sort((a,b)=>b.score-a.score).slice(0,5);
+}
+
+// 2. Scan
+function detectScan(pkts) {
+  const srcMap={};
+  for (const p of pkts) {
+    if (!p.dst_port) continue;
+    const s=srcMap[p.src_ip]||(srcMap[p.src_ip]=[]);
+    s.push({t:p.rel,dip:p.dst_ip,dp:p.dst_port,flags:p.flags||''});
+  }
+  const out=[];
+  for (const [src,ev] of Object.entries(srcMap)) {
+    const W=30;
+    ev.sort((a,b)=>a.t-b.t);
+    const portCnt=new Map(), hostCnt=new Map();
+    const bump=(mp,k)=>mp.set(k,(mp.get(k)||0)+1);
+    const drop=(mp,k)=>{const v=(mp.get(k)||0)-1; v>0?mp.set(k,v):mp.delete(k);};
+    let l=0, syn=0;
+    for (let r=0;r<ev.length;r++) {
+      bump(portCnt,ev[r].dp); bump(hostCnt,ev[r].dip);
+      if (ev[r].flags.includes('S')&&!ev[r].flags.includes('A')) syn++;
+      while (ev[r].t-ev[l].t>W) {
+        drop(portCnt,ev[l].dp); drop(hostCnt,ev[l].dip);
+        if (ev[l].flags.includes('S')&&!ev[l].flags.includes('A')) syn--;
+        l++;
+      }
+      const uPorts=portCnt.size, uHosts=hostCnt.size, synCnt=syn;
+      const win=ev.slice(l,r+1);
+      if (uPorts>=10) {
+        out.push({severity:'high',type:'Port Scan（垂直）',
+          desc:`${src} 掃描多個 Port`,
+          detail:`${W}s 內掃 ${uPorts} 個 Port，SYN ${synCnt} 個，目標 ${[...new Set(win.map(e=>e.dip))][0]}`,
+          score:uPorts*2});
+        break;
+      }
+      if (uHosts>=10) {
+        out.push({severity:'high',type:'Host Scan（水平）',
+          desc:`${src} 掃描多個主機`,
+          detail:`${W}s 內掃 ${uHosts} 個 IP，Port ${[...new Set(win.map(e=>e.dp))].slice(0,4).join('/')}`,
+          score:uHosts*1.5});
+        break;
+      }
+    }
+  }
+  const seen=new Set();
+  return out.filter(f=>{const k=f.desc.split(' ')[0];if(seen.has(k))return false;seen.add(k);return true;});
+}
+
+// 3. Exfil
+function detectExfil(pkts) {
+  const out={};
+  for (const p of pkts) {
+    if (!RFC1918(p.src_ip)||RFC1918(p.dst_ip)||p.dst_ip==='[IPv6]') continue;
+    const s=out[p.src_ip]||(out[p.src_ip]={bytes:0,lens:[],dsts:new Set()});
+    s.bytes+=p.length; s.lens.push(p.length); s.dsts.add(p.dst_ip);
+  }
+  const sizes=pkts.map(p=>p.length).filter(x=>x>0).sort((a,b)=>a-b);
+  const med=sizes[Math.floor(sizes.length/2)]||64;
+  const dur=Math.max((pkts[pkts.length-1].rel-pkts[0].rel)||0, 1);
+  const RATE=20*1024;
+  const FLOOR=256*1024;
+  const res=[];
+  for (const [ip,d] of Object.entries(out)) {
+    const avg=d.bytes/d.lens.length;
+    const rate=d.bytes/dur;
+    if (rate>RATE && d.bytes>FLOOR) res.push({severity:'medium',type:'外傳流量偏大',
+      desc:`${ip} → 外部 (${d.dsts.size} 個目標)`,
+      detail:`送出 ${fmtB(d.bytes)} / ${fmtT(dur)}（${fmtB(rate)}/s），平均封包 ${fmtB(avg)}（中位數 ${fmtB(med)}）`,score:rate});
+    else if (avg>med*8&&d.lens.length>=5) res.push({severity:'medium',type:'封包尺寸異常',
+      desc:`${ip} → 外部`,
+      detail:`平均封包 ${fmtB(avg)} 是正常 ${(avg/med).toFixed(1)}x，${d.lens.length} 個封包`,score:avg/med});
+  }
+  return res.sort((a,b)=>b.score-a.score).slice(0,4);
+}
+
+// 4. Spike
+function detectSpike(pkts) {
+  if (pkts.length<20) return [];
+  const BIN=10, dur=pkts[pkts.length-1].rel-pkts[0].rel;
+  const bins=Math.ceil(dur/BIN)+1;
+  const cnt=new Array(bins).fill(0);
+  for (const p of pkts){const b=Math.floor(p.rel/BIN);if(b>=0&&b<bins)cnt[b]++;}
+  const nz=cnt.filter(x=>x>0);
+  if (nz.length<3) return [];
+  const srt=[...nz].sort((a,b)=>a-b);
+  const trimmed=srt.slice(0, Math.max(3, Math.floor(srt.length*0.9)));
+  const m=mean(trimmed);
+  const sd=Math.max(std(trimmed), Math.sqrt(Math.max(m,1)));
+  const k=0.5*sd, h=4.5*sd;
+  let S=0; const res=[];
+  for (let i=0;i<cnt.length;i++){
+    S=Math.max(0,S+cnt[i]-m-k);
+    if (S>h){
+      const t=i*BIN, ratio=cnt[i]/m;
+      res.push({severity:ratio>8?'high':'medium',type:'流量異常暴增',
+        desc:`T+${fmtT(t)} 流量突升`,
+        detail:`${cnt[i]} 封包/10s，正常基線 ${m.toFixed(1)}，爆增 ${ratio.toFixed(1)}x`,score:ratio});
+      S=0;
+    }
+  }
+  return res.slice(0,3);
+}
+
+// 5. Suspicious Ports
+const SUSP_PORTS = {
+  4444:'Metasploit預設',1337:'後門慣用',31337:'Elite後門',
+  6666:'IRC/殭屍網路',6667:'IRC/殭屍網路',6668:'IRC/殭屍網路',
+  9001:'Tor relay',9050:'Tor SOCKS',1080:'SOCKS Proxy',
+  23:'Telnet明文',69:'TFTP',161:'SNMP',
+  5900:'VNC',3389:'RDP',135:'MS RPC',139:'NetBIOS',445:'SMB',
+  2222:'非標SSH',4545:'後門',8888:'非標HTTP',
+};
+function detectSuspPorts(pkts) {
+  const pm={};
+  for (const p of pkts){
+    if (!SUSP_PORTS[p.dst_port]) continue;
+    const s=pm[p.dst_port]||(pm[p.dst_port]={srcs:new Set(),cnt:0});
+    s.srcs.add(p.src_ip); s.cnt++;
+  }
+  const highPorts=[4444,1337,31337,6666,6667,6668];
+  return Object.entries(pm).map(([port,d])=>({
+    severity:highPorts.includes(+port)?'high':'low',
+    type:'可疑 Port 連線',
+    desc:`Port ${port} — ${SUSP_PORTS[port]}`,
+    detail:`${d.cnt} 個封包，${d.srcs.size} 個來源IP`,
+    score:d.cnt*(highPorts.includes(+port)?3:1)
+  })).sort((a,b)=>b.score-a.score);
+}
+
+// 6. DNS
+function detectDNS(pkts) {
+  const dns=pkts.filter(p=>p.dst_port===53||p.src_port===53);
+  if (dns.length<10) return [];
+  const dur=dns[dns.length-1].rel-dns[0].rel||1;
+  const qps=dns.length/dur;
+  const res=[];
+  if (qps>5) res.push({severity:'medium',type:'DNS 查詢頻率異常',
+    desc:`${dns.length} 個 DNS 封包 / ${dur.toFixed(0)}s`,
+    detail:`查詢速率 ${qps.toFixed(2)} req/s`,score:qps});
+
+  const named=dns.filter(p=>p.qname);
+  if (!named.length) return res;
+
+  const byParent={};
+  for (const p of named) {
+    const parts=p.qname.split('.');
+    if (parts.length<2) continue;
+    const parent=parts.slice(-2).join('.');
+    const sub=parts.slice(0,-2).join('.');
+    const g=byParent[parent]||(byParent[parent]={subs:new Set(),maxLen:0,ents:[],src:p.src_ip});
+    if (sub) { g.subs.add(sub); g.maxLen=Math.max(g.maxLen,sub.length); g.ents.push(shannon(sub)); }
+  }
+  for (const [parent,g] of Object.entries(byParent)) {
+    if (g.subs.size<20) continue;
+    const avgEnt=g.ents.length?mean(g.ents):0;
+    if (avgEnt>3.2 || g.maxLen>40) {
+      res.push({severity:'high',type:'DNS 隧道疑慮',
+        desc:`${g.src} → *.${parent}`,
+        detail:`${g.subs.size} 個不同子網域，最長 ${g.maxLen} 字元，平均熵 ${avgEnt.toFixed(2)}`,
+        score:g.subs.size*avgEnt});
+    }
+  }
+
+  const seen=new Set(); const dga=[];
+  for (const p of named) {
+    const label=p.qname.split('.')[0];
+    if (label.length<10 || seen.has(p.qname)) continue;
+    seen.add(p.qname);
+    const e=shannon(label);
+    const ne=e/Math.log2(Math.max(label.length,2));
+    const digits=(label.match(/\d/g)||[]).length/label.length;
+    if (ne>0.94 && digits>0.1) dga.push({name:p.qname,e,ne,src:p.src_ip});
+  }
+  if (dga.length>=3) {
+    dga.sort((a,b)=>b.e-a.e);
+    res.push({severity:'high',type:'DGA 網域疑慮',
+      desc:`${dga[0].src} 查詢 ${dga.length} 個高亂度網域`,
+      detail:`例：${dga.slice(0,3).map(d=>`${d.name}(亂度${(d.ne*100).toFixed(0)}%)`).join('、')}`,
+      score:dga.length*dga[0].e});
+  }
+  return res;
+}
+
+function analyzeAll(pkts) {
+  const all=[
+    ...detectBeaconing(pkts),
+    ...detectScan(pkts),
+    ...detectExfil(pkts),
+    ...detectSpike(pkts),
+    ...detectSuspPorts(pkts),
+    ...detectDNS(pkts),
+  ];
+  const ord={high:0,medium:1,low:2,info:3};
+  return all.sort((a,b)=>(ord[a.severity]??3)-(ord[b.severity]??3));
+}
+
+function buildStats(pkts) {
+  const usrc=new Set(pkts.map(p=>p.src_ip));
+  const udst=new Set(pkts.map(p=>p.dst_ip));
+  const uport=new Set(pkts.map(p=>p.dst_port).filter(x=>x));
+  const dur=pkts.length>1?pkts[pkts.length-1].rel-pkts[0].rel:0;
+  const bytes=pkts.reduce((s,p)=>s+p.length,0);
+  const extSrc=pkts.filter(p=>p.src_ip!=='[IPv6]'&&!RFC1918(p.src_ip)).map(p=>p.src_ip);
+  const uextSrc=new Set(extSrc).size;
+  const protos={};
+  for (const p of pkts) protos[p.proto]=(protos[p.proto]||0)+1;
+  return {total:pkts.length,usrc:usrc.size,udst:udst.size,uport:uport.size,dur,bytes,uextSrc,protos};
+}
+
+// Canvas charts
+function resizeCanvas(id,h) {
+  const c=document.getElementById(id);
+  c.width=c.parentElement.clientWidth-28;
+  c.height=h||130;
+  return c;
+}
+
+function drawLine(id, vals, color='#0ea5e9') {
+  const c=resizeCanvas(id,130);
+  const ctx=c.getContext('2d'),W=c.width,H=c.height;
+  ctx.clearRect(0,0,W,H);
+  if(!vals.length)return;
+  const max=Math.max(...vals)||1;
+  const PL=8,PT=8,PB=22,PR=8;
+  const cW=W-PL-PR, cH=H-PT-PB;
+
+  ctx.strokeStyle='#1a1d2e'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=PT+cH/4*i;ctx.beginPath();ctx.moveTo(PL,y);ctx.lineTo(W-PR,y);ctx.stroke();}
+
+  ctx.beginPath();
+  ctx.moveTo(PL,PT+cH);
+  for(let i=0;i<vals.length;i++){
+    const x=PL+(i/(vals.length-1||1))*cW;
+    const y=PT+cH-(vals[i]/max)*cH;
+    ctx.lineTo(x,y);
+  }
+  ctx.lineTo(PL+cW,PT+cH); ctx.closePath();
+  ctx.fillStyle='rgba(14,165,233,0.12)'; ctx.fill();
+
+  ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=1.5;
+  for(let i=0;i<vals.length;i++){
+    const x=PL+(i/(vals.length-1||1))*cW;
+    const y=PT+cH-(vals[i]/max)*cH;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle='#1f2937'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PL,H-PB); ctx.lineTo(W-PR,H-PB); ctx.stroke();
+
+  ctx.fillStyle='#4b5563'; ctx.font='9px monospace'; ctx.textAlign='center';
+  const step=Math.ceil(vals.length/6);
+  for(let i=0;i<vals.length;i+=step){
+    const x=PL+(i/(vals.length-1||1))*cW;
+    ctx.fillText((i*10)+'s',x,H-6);
+  }
+}
+
+function drawHBar(id, entries) {
+  const c=resizeCanvas(id,130);
+  const ctx=c.getContext('2d'),W=c.width,H=c.height;
+  ctx.clearRect(0,0,W,H);
+  if(!entries.length)return;
+  const n=Math.min(entries.length,8);
+  const max=entries[0][1]||1;
+  const LW=100, rowH=H/n;
+  ctx.font='9.5px monospace'; ctx.textBaseline='middle';
+  for(let i=0;i<n;i++){
+    const [ip,val]=entries[i];
+    const y=i*rowH;
+    const bw=(val/max)*(W-LW-12);
+    ctx.fillStyle=RFC1918(ip)?'#064e3b':'#450a0a';
+    ctx.fillRect(LW,y+3,bw,rowH-6);
+    ctx.fillStyle='#6b7280';
+    const label=ip.length>13?ip.slice(0,13)+'…':ip;
+    ctx.textAlign='right'; ctx.fillText(label,LW-4,y+rowH/2);
+    ctx.fillStyle='#4b5563'; ctx.textAlign='left';
+    ctx.fillText(val,LW+bw+4,y+rowH/2);
+  }
+  ctx.fillStyle='#086048'; ctx.fillRect(2,H-11,8,8);
+  ctx.fillStyle='#4b5563'; ctx.font='9px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('內部',13,H-7);
+  ctx.fillStyle='#450a0a'; ctx.fillRect(42,H-11,8,8);
+  ctx.fillStyle='#4b5563'; ctx.fillText('外部',53,H-7);
+}
+
+function buildTimeline(pkts) {
+  if(!pkts.length)return[];
+  const BIN=10;
+  const n=Math.ceil(pkts[pkts.length-1].rel/BIN)+1;
+  const cnt=new Array(n).fill(0);
+  for(const p of pkts){const b=Math.floor(p.rel/BIN);if(b>=0&&b<n)cnt[b]++;}
+  return cnt;
+}
+
+function buildTopSrc(pkts) {
+  const m={};
+  for(const p of pkts) m[p.src_ip]=(m[p.src_ip]||0)+1;
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,10);
+}
+
+// Table
+let _all=[], _filt=[], _page=0, _sKey=null, _sDir=1;
+const PG=80;
+
+function flagHtml(f) {
+  return (f||'').split('').map(ch=>{
+    const cls={S:'fl-S',A:'fl-A',P:'fl-P',R:'fl-R',F:'fl-F',U:'fl-U'}[ch]||'';
+    return `<span class="${cls}">${ch}</span>`;
+  }).join('');
+}
+
+function ipHtml(ip) {
+  if(ip==='[IPv6]') return `<span class="ip-v6">${ip}</span>`;
+  return `<span class="${RFC1918(ip)?'ip-int':'ip-ext'}">${ip}</span>`;
+}
+
+function renderTbl() {
+  const start=_page*PG;
+  const slice=_filt.slice(start,start+PG);
+  const pCls={TCP:'proto-tcp',UDP:'proto-udp',ICMP:'proto-icmp'};
+  document.getElementById('tbl-body').innerHTML=slice.map(p=>`<tr>
+    <td>${p.rel.toFixed(2)}s</td>
+    <td>${ipHtml(p.src_ip)}</td>
+    <td>${p.src_port||'-'}</td>
+    <td>${ipHtml(p.dst_ip)}</td>
+    <td>${p.dst_port||'-'}</td>
+    <td class="${pCls[p.proto]||''}">${p.proto}</td>
+    <td>${flagHtml(p.flags)}</td>
+    <td>${p.length}</td>
+  </tr>`).join('');
+  const total=Math.ceil(_filt.length/PG)||1;
+  document.getElementById('pg-info').textContent=`第 ${_page+1} / ${total} 頁`;
+  document.getElementById('row-info').textContent=`${_filt.length.toLocaleString()} 筆`;
+  document.getElementById('btn-prev').disabled=_page===0;
+  document.getElementById('btn-next').disabled=(_page+1)*PG>=_filt.length;
+}
+
+function filterTable() {
+  const q=document.getElementById('tbl-search').value.toLowerCase();
+  const proto=document.getElementById('proto-filter').value;
+  const dir=document.getElementById('dir-filter').value;
+  _filt=_all.filter(p=>{
+    if(proto&&p.proto!==proto)return false;
+    if(dir==='out'&&(!RFC1918(p.src_ip)||RFC1918(p.dst_ip)))return false;
+    if(dir==='in'&&(RFC1918(p.src_ip)||!RFC1918(p.dst_ip)))return false;
+    if(dir==='internal'&&(!RFC1918(p.src_ip)||!RFC1918(p.dst_ip)))return false;
+    if(!q)return true;
+    return p.src_ip.includes(q)||p.dst_ip.includes(q)||String(p.src_port).includes(q)||String(p.dst_port).includes(q)||p.proto.toLowerCase().includes(q)||(p.flags||'').includes(q);
+  });
+  _page=0; renderTbl();
+}
+
+function sortTbl(key) {
+  if(_sKey===key)_sDir*=-1; else{_sKey=key;_sDir=1;}
+  document.querySelectorAll('[id^="sort-"]').forEach(e=>e.textContent='');
+  document.getElementById('sort-'+key).textContent=_sDir>0?'↑':'↓';
+  _filt.sort((a,b)=>{
+    const av=key==='src'?a.src_ip:key==='dst'?a.dst_ip:a.length;
+    const bv=key==='src'?b.src_ip:key==='dst'?b.dst_ip:b.length;
+    return typeof av==='string'?av.localeCompare(bv)*_sDir:(av-bv)*_sDir;
+  });
+  renderTbl();
+}
+
+function prevPage(){if(_page>0){_page--;renderTbl();}}
+function nextPage(){if((_page+1)*PG<_filt.length){_page++;renderTbl();}}
+
+function runAnalysis() {
+  const text=document.getElementById('inp').value;
+  if(!text.trim()){alert('請貼上 tcpdump 輸出');return;}
+
+  const pkts=parseCapture(text);
+  if(!pkts.length){
+    alert('無法解析封包。請確認格式：tcpdump -tttt -nn ...');
+    return;
+  }
+
+  const s=buildStats(pkts);
+  const extWarn=s.uextSrc>0;
+  document.getElementById('stats-bar').innerHTML=[
+    `<div class="stat-pill">總封包 <strong>${s.total.toLocaleString()}</strong></div>`,
+    `<div class="stat-pill">時長 <strong>${fmtT(s.dur)}</strong></div>`,
+    `<div class="stat-pill">內部IP <strong>${s.usrc}</strong></div>`,
+    `<div class="stat-pill">目標IP <strong>${s.udst}</strong></div>`,
+    `<div class="stat-pill">涉及Port <strong>${s.uport}</strong></div>`,
+    `<div class="stat-pill">總流量 <strong>${fmtB(s.bytes)}</strong></div>`,
+    extWarn?`<div class="stat-pill" style="border-color:#7c2d12;background:#1a0d06;color:#fca5a5;">外部來源IP <strong>${s.uextSrc}</strong></div>`:'',
+    ...Object.entries(s.protos).map(([k,v])=>`<div class="stat-pill">${k} <strong>${v}</strong></div>`),
+  ].join('');
+
+  const findings=analyzeAll(pkts);
+  const fEl=document.getElementById('findings-list');
+  if(!findings.length){
+    fEl.innerHTML='<div style="font-size:12px;color:#374151;padding:8px 0;">✓ 未偵測到明顯威脅特徵（不代表無威脅，請人工確認明細）</div>';
+  } else {
+    const smap={high:'fhigh',medium:'fmed',low:'flow',info:'finfo'};
+    const bmap={high:'sev-high',medium:'sev-med',low:'sev-low',info:'sev-info'};
+    fEl.innerHTML=findings.map(f=>`
+      <div class="finding ${smap[f.severity]||'finfo'}">
+        <div class="f-left"><span class="sev ${bmap[f.severity]||'sev-info'}">${f.severity.toUpperCase()}</span></div>
+        <div class="f-body">
+          <div class="f-type">${f.type}</div>
+          <div class="f-desc">${f.desc}</div>
+          <div class="f-detail">${f.detail}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  const timeline=buildTimeline(pkts);
+  const topSrc=buildTopSrc(pkts);
+  requestAnimationFrame(()=>{
+    drawLine('c-timeline',timeline);
+    drawHBar('c-talkers',topSrc);
+  });
+
+  _all=[...pkts]; _filt=[...pkts]; _page=0;
+  filterTable();
+
+  document.getElementById('results').classList.remove('hidden');
+  requestAnimationFrame(()=>document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'}));
+}
+
+function clearPacketScope() {
+  document.getElementById('inp').value='';
+  document.getElementById('line-count').textContent='0 行';
+  document.getElementById('results').classList.add('hidden');
+}
+
+// Drag & drop
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault(); dz.classList.remove('dragover');
+  const f=e.dataTransfer.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    document.getElementById('inp').value=ev.target.result;
+    updateLineCount(ev.target.result);
+  };
+  r.readAsText(f);
+});
+
+document.getElementById('inp').addEventListener('input',function(){updateLineCount(this.value);});
+function updateLineCount(v){
+  const n=v.split('\n').filter(l=>l.trim()).length;
+  document.getElementById('line-count').textContent=n.toLocaleString()+' 行';
+}
+
+function loadPacketSample(mode = 'mixed') {
+  const T0 = Date.parse('2026-05-23T09:00:00Z') / 1000;
+  const lines = [];
+  const ts = (off, jitter = 0) => {
+    const t = T0 + off + (Math.random() - 0.5) * jitter;
+    const d = new Date(t * 1000);
+    return d.toISOString().replace('T', ' ').replace('Z', '').replace(/(\.\d{3})\d*/, '$1') + String(Math.floor(Math.random() * 999)).padStart(3, '0');
+  };
+
+  if (mode === 'normal') {
+    // Pure normal traffic - 0 threats
+    for (let i = 0; i < 50; i++) {
+      const t = i * 2.5, sp = 50000 + i;
+      lines.push(`${ts(t)} IP 192.168.1.10.${sp} > 1.1.1.1.443: Flags [S], seq 1, win 64240, length 0`);
+      lines.push(`${ts(t + 0.04)} IP 1.1.1.1.443 > 192.168.1.10.${sp}: Flags [SA], seq 1, ack 2, win 65535, length 52`);
+      lines.push(`${ts(t + 0.08)} IP 192.168.1.10.${sp} > 1.1.1.1.443: Flags [PA], seq 2, ack 2, length 320`);
+      lines.push(`${ts(t + 0.12)} IP 1.1.1.1.443 > 192.168.1.10.${sp}: Flags [PA], seq 2, ack 321, length 1420`);
+      lines.push(`${ts(t + 0.15)} IP 192.168.1.10.${sp} > 1.1.1.1.443: Flags [F.], seq 322, ack 1421, length 0`);
+    }
+    for (let i = 0; i < 30; i++) {
+      lines.push(`${ts(i * 4.1)} IP 192.168.1.10.${45000 + i} > 8.8.8.8.53: UDP, length 32`);
+      lines.push(`${ts(i * 4.1 + 0.03)} IP 8.8.8.8.53 > 192.168.1.10.${45000 + i}: UDP, length 85`);
+    }
+  } else if (mode === 'ddos') {
+    // DDoS SYN Flood + High risk port attack
+    for (let i = 0; i < 150; i++) {
+      const srcIp = `198.51.100.${(i * 7) % 250 + 1}`;
+      const sp = 40000 + (i % 20000);
+      lines.push(`${ts(i * 0.05)} IP ${srcIp}.${sp} > 192.168.1.1.80: Flags [S], seq 1, win 1024, length 0`);
+    }
+    for (let p of [4444, 1337, 31337, 23, 3389]) {
+      lines.push(`${ts(10 + Math.random() * 5)} IP 45.92.1.100.58921 > 192.168.1.10.${p}: Flags [S], seq 1, length 0`);
+    }
+  } else {
+    // Mixed comprehensive scenario (Normal + Beaconing + PortScan + Exfil + Spike)
+    for (let i = 0; i < 40; i++) {
+      const t = i * 3.7, sp = 50000 + i;
+      lines.push(`${ts(t)} IP 192.168.1.10.${sp} > 1.1.1.1.443: Flags [S], seq 1, win 64240, length 0`);
+      lines.push(`${ts(t + 0.05)} IP 1.1.1.1.443 > 192.168.1.10.${sp}: Flags [SA], seq 1, ack 2, win 65535, length 52`);
+      lines.push(`${ts(t + 0.1)} IP 192.168.1.10.${sp} > 1.1.1.1.443: Flags [PA], seq 2, ack 2, length 350`);
+      lines.push(`${ts(t + 0.15)} IP 1.1.1.1.443 > 192.168.1.10.${sp}: Flags [PA], seq 2, ack 351, length 1400`);
+    }
+
+    for (let i = 0; i < 25; i++) {
+      lines.push(`${ts(i * 5.2)} IP 192.168.1.10.${45000 + i} > 8.8.8.8.53: UDP, length 30`);
+      lines.push(`${ts(i * 5.2 + 0.03)} IP 8.8.8.8.53 > 192.168.1.10.${45000 + i}: UDP, length 80`);
+    }
+
+    // 🔴 C2 Beaconing (定時心跳回連)
+    for (let i = 0; i < 9; i++) {
+      const t = 15 + i * 60, sp = 55000 + i;
+      lines.push(`${ts(t, 2)} IP 192.168.1.105.${sp} > 45.92.1.100.4444: Flags [S], seq 1, win 64240, length 0`);
+      lines.push(`${ts(t + 0.08)} IP 45.92.1.100.4444 > 192.168.1.105.${sp}: Flags [SA], seq 1, ack 2, length 128`);
+      lines.push(`${ts(t + 0.12)} IP 192.168.1.105.${sp} > 45.92.1.100.4444: Flags [PA], seq 2, ack 2, length 48`);
+      lines.push(`${ts(t + 0.5)} IP 45.92.1.100.4444 > 192.168.1.105.${sp}: Flags [PA], seq 2, ack 49, length 32`);
+      lines.push(`${ts(t + 0.55)} IP 192.168.1.105.${sp} > 45.92.1.100.4444: Flags [A], length 0`);
+    }
+
+    // 🔴 Port Scan (垂直連接埠掃描)
+    for (let port = 20; port < 48; port++) {
+      const t = 18 + (port - 20) * 0.25;
+      lines.push(`${ts(t)} IP 10.0.0.88.${60000 + port} > 192.168.1.1.${port}: Flags [S], seq 1, win 1024, length 0`);
+      if ([22, 80, 443, 3306].includes(port)) {
+        lines.push(`${ts(t + 0.04)} IP 192.168.1.1.${port} > 10.0.0.88.${60000 + port}: Flags [SA], seq 1, ack 2, length 0`);
+      } else {
+        lines.push(`${ts(t + 0.02)} IP 192.168.1.1.${port} > 10.0.0.88.${60000 + port}: Flags [R], seq 0, length 0`);
+      }
+    }
+
+    // 🟡 Exfil (機密資料巨量外洩)
+    for (let i = 0; i < 25; i++) {
+      lines.push(`${ts(250 + i * 2)} IP 192.168.1.50.${62000 + i} > 203.0.113.50.443: Flags [PA], seq ${i * 8192}, ack 1, length 8192`);
+      lines.push(`${ts(250 + i * 2 + 0.1)} IP 203.0.113.50.443 > 192.168.1.50.${62000 + i}: Flags [A], seq 1, ack ${i * 8192 + 8192}, length 0`);
+    }
+
+    // 🔴 Spike (異常流量突波)
+    for (let i = 0; i < 90; i++) {
+      lines.push(`${ts(420 + i * 0.09)} IP 198.51.100.${i % 60} > 192.168.1.1.80: Flags [S], seq 1, win 1024, length 0`);
+    }
+  }
+
+  lines.sort((a, b) => a.localeCompare(b));
+  document.getElementById('inp').value = lines.join('\n');
+  updateLineCount(lines.join('\n'));
+  runAnalysis();
+}
+</script>
+</body>
+</html>

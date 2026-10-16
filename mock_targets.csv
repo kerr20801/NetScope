@@ -1,0 +1,19 @@
+﻿目標主機,Port,服務說明,業務分組,協定
+1.1.1.1,443,Cloudflare Web (HTTPS 握手正常),公共Web,tcp
+8.8.8.8,53,Google 公共 DNS (UDP 查詢正常),基礎網通,udp
+time.windows.com,123,Windows 網路時間 NTP 校時,基礎網通,udp
+1.1.1.1,icmp,Cloudflare 外網節點 Ping,邊界連通,icmp
+127.0.0.1,8900,NetScope 本機 Web 服務,本機連線,tcp
+10.0.1.10,443,企業入口 Web 門戶 (HTTPS),Web前端,tcp
+10.0.1.15,80,HTTP 重導向服務,Web前端,tcp
+10.0.1.12,8080,微服務 API Gateway,API服務,tcp
+10.0.2.20,1433,MSSQL 主資料庫,資料庫層,tcp
+10.0.2.30,6379,Redis Session 快取,快取層,tcp
+10.0.2.25,3306,MySQL 報表資料庫,資料庫層,tcp
+10.0.3.50,161,核心交換機 SNMP 監控,網通服務,udp
+10.0.3.60,514,SIEM 資安日誌收容 (Syslog),資安維運,udp
+127.0.0.1,48293,模擬未開 UDP (收到 ICMP Unreachable),測試群,udp
+10.255.255.1,443,模擬防火牆阻擋 (Silent Drop 逾時),測試群,tcp
+198.51.100.25,8443,外部黑名單伺服器 (DROP),測試群,tcp
+erp-legacy-cluster.corp.internal,8080,舊版 ERP 主機 (已廢棄下線),核心系統,tcp
+db-standby-node.invalid.domain,1521,Oracle 備份主機 (無DNS記錄),資料庫層,tcp
