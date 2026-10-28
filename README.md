@@ -122,7 +122,6 @@ NetScope/
 
 ## 👨‍💻 作者與致謝 (Author & Acknowledgement)
 * **架構與維護者**：Kerr ([@kerr20801](https://github.com/kerr20801)) & Google Gemini
-* **核心哲學**：*「只有弱的是人，不是 AI！(The limitation lies in human direction, not AI.)」*
 * **威脅引擎**：源自開源專案 [kerr20801/PacketScope](https://github.com/kerr20801/PacketScope)
 
 ---
